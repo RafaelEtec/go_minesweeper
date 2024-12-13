@@ -125,17 +125,17 @@ func main() {
 }
 
 func countBombs(g *Game) {
-	bomb, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/skull.png?raw=true")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// bomb, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/skull.png?raw=true")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	for r := 0; r < ROWS; r++ {
 		for c := 0; c < COLS; c++ {
 			tile := g.board.tiles[r][c]
 
 			if tile.isBomb {
-				tile.Img = bomb
+				tile.neighborCount = 10
 				continue
 			}
 
@@ -210,7 +210,7 @@ func createBoard(g *Game) {
 		for c := 0; c < COLS; c++ {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
-			g.board.tiles[r][c].neighborCount = 0
+			g.board.tiles[r][c].neighborCount = 9
 			g.board.tiles[r][c].Img = blank
 			g.board.tiles[r][c].X = c * W
 			g.board.tiles[r][c].Y = r * W
