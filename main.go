@@ -63,6 +63,9 @@ type Tile struct {
 
 	X int
 	Y int
+
+	R int
+	C int
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -110,7 +113,7 @@ func main() {
 	createBoard(game)
 
 	randomizeBombs(game)
-	countNeighboors(game)
+	countBombs(game)
 
 	printBoard(game)
 
@@ -121,11 +124,41 @@ func main() {
 	}
 }
 
-func countNeighboors(g *Game) {
+func countBombs(g *Game) {
+	bomb, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/skull.png?raw=true")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for r := 0; r < ROWS; r++ {
 		for c := 0; c < COLS; c++ {
-			//tile := g.board.tiles[r][c]
+			tile := g.board.tiles[r][c]
 
+			if tile.isBomb {
+				tile.Img = bomb
+				continue
+			}
+
+			total := 0
+			for roff := -1; roff <= 1; roff++ {
+				i := tile.R + roff
+				if i < 0 || i >= ROWS {
+					continue
+				}
+
+				for coff := -1; coff <= 1; coff++ {
+					j := tile.C + coff
+					if j < 0 || j >= COLS {
+						continue
+					}
+
+					neighbor := g.board.tiles[i][j]
+					if neighbor.isBomb {
+						total++
+					}
+				}
+			}
+			tile.neighborCount = total
 		}
 	}
 }
@@ -168,7 +201,7 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 }
 
 func createBoard(g *Game) {
-	tile, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/5c053b8fde59f59344f9eeac326bfd4b4b40ff73/assets/images/tiles.png?raw=true")
+	blank, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/blank.png?raw=true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,10 +210,12 @@ func createBoard(g *Game) {
 		for c := 0; c < COLS; c++ {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
-			g.board.tiles[r][c].neighborCount = 2
-			g.board.tiles[r][c].Img = tile
+			g.board.tiles[r][c].neighborCount = 0
+			g.board.tiles[r][c].Img = blank
 			g.board.tiles[r][c].X = c * W
 			g.board.tiles[r][c].Y = r * W
+			g.board.tiles[r][c].R = r
+			g.board.tiles[r][c].C = c
 		}
 	}
 }
