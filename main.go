@@ -14,26 +14,27 @@ import (
 )
 
 const (
-	SCREEN_WIDTH  = 488
-	SCREEN_HEIGHT = 488
+	SCREEN_WIDTH  = 480
+	SCREEN_HEIGHT = 494
 
 	FRAME_OX     = 0
 	FRAME_OY     = 0
 	FRAME_WIDTH  = 32
 	FRAME_HEIGHT = 32
 
-	BOARD_WIDTH  = 488
-	BOARD_HEIGHT = 488
+	BOARD_WIDTH  = 480
+	BOARD_HEIGHT = 494
 
 	COLS = 15
 	ROWS = 15
 	W    = 32
 
-	STARTING_BOMBS = 50
+	STARTING_BOMBS = 38
 
-	MESSAGE_MOVES   = "Moves: %d"
-	MESSAGE_DEFEAT  = "You Die!"
+	MESSAGE_FLAGS   = "Flags: %d"
+	MESSAGE_DEFEAT  = "You're Dead!"
 	MESSAGE_VICTORY = "You Win!"
+	MESSAGE_TIME    = ""
 )
 
 var (
@@ -43,6 +44,8 @@ var (
 type Game struct {
 	state   int
 	message string
+
+	flags int
 
 	board *Board
 }
@@ -85,9 +88,38 @@ func handleMouse(g *Game) {
 	if inpututil.IsMouseButtonJustPressed(0) {
 		x, y := ebiten.CursorPosition()
 		r, c := checkPosition(g, x, y)
+
 		if r != -1 && c != -1 {
-			g.board.tiles[r][c].isRevealed = true
+			tile := g.board.tiles[r][c]
+			reveal(g, tile)
+
+			if tile.isBomb {
+				gameOver(g)
+			}
 		}
+	}
+}
+
+func floodFill(g *Game, tile *Tile) {
+	for roff := -1; roff <= 1; roff++ {
+		for coff := -1; coff <= 1; coff++ {
+			i := tile.R + roff
+			j := tile.C + coff
+
+			if i > -1 && i < ROWS && j > -1 && j < COLS {
+				neighbor := g.board.tiles[i][j]
+				if !neighbor.isBomb && !neighbor.isRevealed {
+					reveal(g, neighbor)
+				}
+			}
+		}
+	}
+}
+
+func reveal(g *Game, tile *Tile) {
+	tile.isRevealed = true
+	if tile.neighborCount == 0 {
+		floodFill(g, tile)
 	}
 }
 
@@ -103,12 +135,23 @@ func checkPosition(g *Game, x int, y int) (int, int) {
 	return -1, -1
 }
 
+func gameOver(g *Game) {
+	g.message = MESSAGE_DEFEAT
+
+	for r := 0; r < ROWS; r++ {
+		for c := 0; c < COLS; c++ {
+			g.board.tiles[r][c].isRevealed = true
+		}
+	}
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{180, 180, 180, 255})
 
 	opts := ebiten.DrawImageOptions{}
 
 	drawTiles(g, opts, screen)
+	drawStats(g, screen)
 }
 
 func main() {
@@ -151,11 +194,6 @@ func main() {
 }
 
 func countBombs(g *Game) {
-	// bomb, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/skull.png?raw=true")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	for r := 0; r < ROWS; r++ {
 		for c := 0; c < COLS; c++ {
 			tile := g.board.tiles[r][c]
@@ -227,6 +265,13 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 	}
 }
 
+func drawStats(g *Game, screen *ebiten.Image) {
+	flags := fmt.Sprintf(MESSAGE_FLAGS, g.flags)
+
+	ebitenutil.DebugPrintAt(screen, g.message, 1, SCREEN_HEIGHT-16)
+	ebitenutil.DebugPrintAt(screen, flags, 426, SCREEN_HEIGHT-16)
+}
+
 func createBoard(g *Game) {
 	tiles, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/12836ac92abc1039a639e583e6f1eed9b038da71/assets/images/tiles_new.png?raw=true")
 	if err != nil {
@@ -237,7 +282,7 @@ func createBoard(g *Game) {
 		for c := 0; c < COLS; c++ {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
-			g.board.tiles[r][c].neighborCount = 9
+			g.board.tiles[r][c].neighborCount = 0
 			g.board.tiles[r][c].Img = tiles
 			g.board.tiles[r][c].X = c * W
 			g.board.tiles[r][c].Y = r * W
