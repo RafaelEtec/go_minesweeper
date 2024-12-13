@@ -1,31 +1,34 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
+	"math/rand/v2"
+	"time"
 
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 const (
-	SCREEN_WIDTH  = 294
-	SCREEN_HEIGHT = 308
+	SCREEN_WIDTH  = 488
+	SCREEN_HEIGHT = 488
 
 	FRAME_OX     = 0
 	FRAME_OY     = 0
 	FRAME_WIDTH  = 32
 	FRAME_HEIGHT = 32
 
-	BOARD_WIDTH  = 288
-	BOARD_HEIGHT = 288
+	BOARD_WIDTH  = 488
+	BOARD_HEIGHT = 488
 
-	COLS = 20
-	ROWS = 20
+	COLS = 15
+	ROWS = 15
 	W    = 32
 
-	STARTING_BOMBS = 30
+	STARTING_BOMBS = 50
 
 	MESSAGE_MOVES   = "Moves: %d"
 	MESSAGE_DEFEAT  = "You Die!"
@@ -34,8 +37,6 @@ const (
 
 var (
 	STARTED = false
-	X       = -1
-	Y       = -1
 )
 
 type Game struct {
@@ -50,15 +51,18 @@ type Game struct {
 //        2 = won
 
 type Board struct {
-	tiles [20][20]*Tile
+	tiles [][]*Tile
 }
 
 type Tile struct {
-	Img           *ebiten.Image
-	neighborCount int
+	Img *ebiten.Image
 
-	isBomb     bool
-	isRevealed bool
+	neighborCount int
+	isBomb        bool
+	isRevealed    bool
+
+	X int
+	Y int
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -83,18 +87,58 @@ func main() {
 		state:   1,
 		message: "",
 		board: &Board{
-			tiles: [20][20]*Tile{},
+			tiles: [][]*Tile{
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+				{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			},
 		},
 	}
 
 	createBoard(game)
 
-	//randomizeBombs(game)
+	randomizeBombs(game)
+	countNeighboors(game)
+
+	printBoard(game)
 
 	ebiten.SetWindowSize(SCREEN_WIDTH*2, SCREEN_HEIGHT*2)
 	ebiten.SetWindowTitle("MINESWEEPER by Rafael Goulart")
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func countNeighboors(g *Game) {
+	for r := 0; r < ROWS; r++ {
+		for c := 0; c < COLS; c++ {
+			//tile := g.board.tiles[r][c]
+
+		}
+	}
+}
+
+func randomizeBombs(g *Game) {
+	for n := 0; n < STARTING_BOMBS; {
+		r := rand.IntN(ROWS)
+		c := rand.IntN(COLS)
+
+		if !g.board.tiles[r][c].isBomb {
+			g.board.tiles[r][c].isBomb = true
+			n++
+		}
 	}
 }
 
@@ -124,7 +168,7 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 }
 
 func createBoard(g *Game) {
-	tile, err := ebitenutil.NewImageFromFile("/assets/images/clues.png")
+	tile, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/c3693abcaf6fae1c1ff121122cb50565159c7f38/assets/images/clues.png?raw=true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,6 +179,23 @@ func createBoard(g *Game) {
 			g.board.tiles[r][c].isBomb = false
 			g.board.tiles[r][c].neighborCount = 0
 			g.board.tiles[r][c].Img = tile
+			g.board.tiles[r][c].X = c * W
+			g.board.tiles[r][c].Y = r * W
 		}
 	}
+}
+
+func printBoard(g *Game) {
+	for i := 0; i < ROWS; i++ {
+		for j := 0; j < COLS; j++ {
+			if j == ROWS-1 {
+				fmt.Print(g.board.tiles[i][j].neighborCount)
+			} else {
+				fmt.Print(g.board.tiles[i][j].neighborCount, "-")
+			}
+			time.Sleep(time.Millisecond * 1)
+		}
+		fmt.Println("")
+	}
+	fmt.Println("")
 }
