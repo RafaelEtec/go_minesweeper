@@ -10,6 +10,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -73,8 +74,33 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func (g *Game) Update() error {
+	if g.state == 1 {
+		handleMouse(g)
+	}
 
 	return nil
+}
+
+func handleMouse(g *Game) {
+	if inpututil.IsMouseButtonJustPressed(0) {
+		x, y := ebiten.CursorPosition()
+		r, c := checkPosition(g, x, y)
+		if r != -1 && c != -1 {
+			g.board.tiles[r][c].isRevealed = true
+		}
+	}
+}
+
+func checkPosition(g *Game, x int, y int) (int, int) {
+	for r := 0; r < ROWS; r++ {
+		for c := 0; c < COLS; c++ {
+			tile := g.board.tiles[r][c]
+			if x > tile.X && x < tile.X+W && y > tile.Y && y < tile.Y+W {
+				return r, c
+			}
+		}
+	}
+	return -1, -1
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
