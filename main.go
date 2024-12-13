@@ -179,15 +179,16 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 	for r := 0; r < ROWS; r++ {
 		for c := 0; c < COLS; c++ {
 			tile := g.board.tiles[r][c]
+			offset := tile.neighborCount
+			if !tile.isRevealed {
+				offset = 9
+			}
 
 			fox, foy, fw, fh := FRAME_OX, FRAME_OY, FRAME_WIDTH, FRAME_HEIGHT
-			foy += 32 * tile.neighborCount
-			fh *= tile.neighborCount + 1
+			foy += 32 * offset
+			fh *= offset + 1
 
-			rspace := r/3 + 2
-			cspace := c/3 + 2
-
-			opts.GeoM.Translate(float64(c)*32+float64(cspace), float64(r)*32+float64(rspace))
+			opts.GeoM.Translate(float64(c)*W, float64(r)*W)
 			screen.DrawImage(
 				tile.Img.SubImage(
 					image.Rect(fox, foy, fw, fh),
@@ -201,7 +202,7 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 }
 
 func createBoard(g *Game) {
-	blank, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/27dc2e25bf4362beb80684bc2c91c56963481388/assets/images/blank.png?raw=true")
+	tiles, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/12836ac92abc1039a639e583e6f1eed9b038da71/assets/images/tiles_new.png?raw=true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -211,7 +212,7 @@ func createBoard(g *Game) {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
 			g.board.tiles[r][c].neighborCount = 9
-			g.board.tiles[r][c].Img = blank
+			g.board.tiles[r][c].Img = tiles
 			g.board.tiles[r][c].X = c * W
 			g.board.tiles[r][c].Y = r * W
 			g.board.tiles[r][c].R = r
