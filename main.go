@@ -168,7 +168,7 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 }
 
 func createBoard(g *Game) {
-	tile, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/c3693abcaf6fae1c1ff121122cb50565159c7f38/assets/images/clues.png?raw=true")
+	tile, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/5c053b8fde59f59344f9eeac326bfd4b4b40ff73/assets/images/tiles.png?raw=true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func createBoard(g *Game) {
 		for c := 0; c < COLS; c++ {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
-			g.board.tiles[r][c].neighborCount = 0
+			g.board.tiles[r][c].neighborCount = 2
 			g.board.tiles[r][c].Img = tile
 			g.board.tiles[r][c].X = c * W
 			g.board.tiles[r][c].Y = r * W
