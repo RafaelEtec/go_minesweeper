@@ -85,7 +85,7 @@ func (g *Game) Update() error {
 }
 
 func handleMouse(g *Game) {
-	if inpututil.IsMouseButtonJustPressed(0) {
+	if inpututil.IsMouseButtonJustPressed(1) {
 		x, y := ebiten.CursorPosition()
 		r, c := checkPosition(g, x, y)
 
@@ -98,6 +98,8 @@ func handleMouse(g *Game) {
 			}
 		}
 	}
+
+	//if inpututil.IsMouseButtonJustPressed(1)
 }
 
 func floodFill(g *Game, tile *Tile) {
