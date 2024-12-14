@@ -64,6 +64,7 @@ type Tile struct {
 	neighborCount int
 	isBomb        bool
 	isRevealed    bool
+	isFlag        bool
 
 	X int
 	Y int
@@ -85,7 +86,7 @@ func (g *Game) Update() error {
 }
 
 func handleMouse(g *Game) {
-	if inpututil.IsMouseButtonJustPressed(1) {
+	if inpututil.IsMouseButtonJustPressed(0) {
 		x, y := ebiten.CursorPosition()
 		r, c := checkPosition(g, x, y)
 
@@ -99,7 +100,29 @@ func handleMouse(g *Game) {
 		}
 	}
 
-	//if inpututil.IsMouseButtonJustPressed(1)
+	if inpututil.IsMouseButtonJustPressed(2) {
+		x, y := ebiten.CursorPosition()
+		r, c := checkPosition(g, x, y)
+
+		if r != -1 && c != -1 {
+			tile := g.board.tiles[r][c]
+			placeFlag(g, tile)
+		}
+	}
+}
+
+func placeFlag(g *Game, tile *Tile) {
+	if !tile.isRevealed {
+		if !tile.isFlag {
+			if g.flags > 0 {
+				tile.isFlag = true
+				g.flags -= 1
+			}
+		} else {
+			tile.isFlag = false
+			g.flags += 1
+		}
+	}
 }
 
 func floodFill(g *Game, tile *Tile) {
@@ -159,6 +182,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func main() {
 	game := &Game{
 		state:   1,
+		flags:   STARTING_BOMBS,
 		message: "",
 		board: &Board{
 			tiles: [][]*Tile{
@@ -250,6 +274,10 @@ func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
 				offset = 9
 			}
 
+			if tile.isFlag {
+				offset = 11
+			}
+
 			fox, foy, fw, fh := FRAME_OX, FRAME_OY, FRAME_WIDTH, FRAME_HEIGHT
 			foy += 32 * offset
 			fh *= offset + 1
@@ -271,11 +299,11 @@ func drawStats(g *Game, screen *ebiten.Image) {
 	flags := fmt.Sprintf(MESSAGE_FLAGS, g.flags)
 
 	ebitenutil.DebugPrintAt(screen, g.message, 1, SCREEN_HEIGHT-16)
-	ebitenutil.DebugPrintAt(screen, flags, 426, SCREEN_HEIGHT-16)
+	ebitenutil.DebugPrintAt(screen, flags, 420, SCREEN_HEIGHT-16)
 }
 
 func createBoard(g *Game) {
-	tiles, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/12836ac92abc1039a639e583e6f1eed9b038da71/assets/images/tiles_new.png?raw=true")
+	tiles, err := ebitenutil.NewImageFromURL("https://github.com/RafaelEtec/go_minesweeper/blob/03c9bb37cee39d27eb2b2cb70cbef9bfbee2fe15/assets/images/tiles_new.png?raw=true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -284,6 +312,7 @@ func createBoard(g *Game) {
 		for c := 0; c < COLS; c++ {
 			g.board.tiles[r][c].isRevealed = false
 			g.board.tiles[r][c].isBomb = false
+			g.board.tiles[r][c].isFlag = false
 			g.board.tiles[r][c].neighborCount = 0
 			g.board.tiles[r][c].Img = tiles
 			g.board.tiles[r][c].X = c * W
