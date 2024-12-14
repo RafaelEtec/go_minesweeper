@@ -82,9 +82,30 @@ func (g *Game) Update() error {
 		handleMouse(g)
 	}
 
+	handleVictory(g)
+
 	options(g)
 
 	return nil
+}
+
+func handleVictory(g *Game) {
+	won := true
+
+	for r := 0; r < ROWS; r++ {
+		for c := 0; c < COLS; c++ {
+			tile := g.board.tiles[r][c]
+
+			if tile.isBomb && !tile.isFlag {
+				won = false
+			}
+		}
+	}
+
+	if won {
+		g.state = 2
+		g.message = MESSAGE_VICTORY
+	}
 }
 
 func options(g *Game) {
