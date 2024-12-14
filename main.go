@@ -82,7 +82,28 @@ func (g *Game) Update() error {
 		handleMouse(g)
 	}
 
+	options(g)
+
 	return nil
+}
+
+func options(g *Game) {
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		restart(g)
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+		gameOver(g)
+	}
+}
+
+func restart(g *Game) {
+	g.flags = STARTING_BOMBS
+	g.state = 1
+	g.message = ""
+
+	createBoard(g)
+	randomizeBombs(g)
+	countBombs(g)
 }
 
 func handleMouse(g *Game) {
@@ -161,6 +182,7 @@ func checkPosition(g *Game, x int, y int) (int, int) {
 }
 
 func gameOver(g *Game) {
+	g.state = 0
 	g.message = MESSAGE_DEFEAT
 
 	for r := 0; r < ROWS; r++ {
